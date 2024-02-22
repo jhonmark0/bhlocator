@@ -1,0 +1,73 @@
+/* Slider Start */
+#main-home {
+    width: 75%;
+    margin: auto;
+    margin-top: 8%;
+  }
+  #top-btn-div {
+    border-bottom: 0.5px solid rgb(203, 194, 194);
+  }
+  #top-btn-div button {
+    border: none;
+    padding: 5px 15px;
+    color: rgb(99, 90, 90);
+    font-weight: 600;
+    background-color: white;
+  }
+  #top-btn-div button:hover {
+    background-color: rgb(243, 245, 247);
+  }
+  #top-btn-div button:focus {
+    color: rgb(54, 132, 194);
+    border: 0.5px dotted black;
+    border-bottom: 2px solid rgb(54, 132, 194);
+  }
+  .main-carousel {
+    width: 100%;
+    margin: auto;
+    margin-top: 1%;
+    border-radius: 8px;
+  }
+  .cell {
+    width: 23.6%;
+    margin: 0 10px;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+  .cell img {
+    width: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+  }
+  .cell h6 {
+    padding-top: 8px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .cell p {
+    font-size: 14px;
+  }
+  .Avg-price {
+    font-weight: 700;
+  }
+  
+  /* Slider End */
+  
+  /* Passege start */
+  #passege {
+    width: 75%;
+    margin: auto;
+    margin-top: 7%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  #passege h5 {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .span-1 {
+    font-weight: 700;
+  }
+  /* Passege End */

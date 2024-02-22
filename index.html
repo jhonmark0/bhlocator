@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/searchbar.css">
+    <link rel="stylesheet" href="css/footer.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <title>Home</title>
+    <style>
+        #map {
+            height: 400px;
+            width: 50%;
+            margin-top: 8%;
+            margin-left: 25%;
+            z-index: 0;
+        }
+  </style>
+  </head>
+  <body>
+
+    <!-- nav -->
+    <div>
+        <nav>
+          <div id="nav-left-option">
+            <div class="dropdown">
+              <a
+                class="btn btn-secondary dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                id="nav-menuBTN"
+              >
+                Menu
+              </a>
+              <ul class="dropdown-menu" id="dropdown-menu-id">
+                  <li><a class="dropdown-item" href="admin_login.php">Login as Admin</a></li>
+                  <li><a class="dropdown-item" href="bhowner_login.php">Login as BH Owner</a></li>
+                  <!-- <li><a class="dropdown-item" href="#">Help and Support</a></li> -->
+              </ul>
+            </div>
+          </div>
+        </nav>
+
+        <div id="nav-Bar-2">
+          <div id="nav-Deals-from">
+            <div class="nav-Img-logo">
+              <a href="index.html">
+                <img
+                  src="logo.png"
+                  alt="logo"
+                />
+              </a>
+            </div>
+
+            <div id="nav-text-Deals-from">
+              <div><b><span id="detail-span">Deals from your favorite locator site</span></b></div>
+              <div>
+                <p>
+                  Try searching for your Boarding House!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+    <!-- End -->
+
+<!-- searchbar -->
+<div class="search">
+  <div class="search-container">
+      <!-- Add this input field and button inside your existing search container -->
+      <input type="text" id="boardingHouseNameInput" class="search-input" placeholder="Enter Boarding House Name...">
+      <button class="filter-button" onclick="searchBoardingHouse()"> <i class="material-icons">search</i> </button>
+
+      <div class="filter-dropdown">
+        <button class="filter-button" onclick="toggleFilterDropdown()"> <i class="material-icons">tune</i> </button>
+        <div class="filter-content" id="filterDropdown">
+            <div class="price-inputs">
+                <input type="number" id="maxPriceInput" placeholder="Max Price">
+            </div>
+            <div class="room-type-dropdown">
+                <select id="roomTypeDropdown" class="form-select" aria-label="Room Type">
+                    <option value="" selected disabled>Select Room Type</option>
+                    <option value="Single Room">Single Room</option>
+                    <option value="Double Room">Double Room</option>
+                    <option value="Triple Room">Triple Room</option>
+                    <option value="Quad Room">Quad Room</option>
+                    <option value="NoLimit">No Limit</option>
+                    <!-- Add more room types as needed -->
+                </select>
+            </div>
+            <button onclick="applyFilter()">Apply</button>
+        </div>
+    </div>   
+  </div>
+</div>
+<!-- End -->
+
+
+
+<!-- map -->
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+<script>
+  // Declare map globally
+  let map;
+
+  $(document).ready(function () {
+    // Fetch boarding houses and initialize the map
+    $.ajax({
+        url: 'components/getBoardingHouses.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function (boardingHouses) {
+            // Call initMap with the boarding houses data
+            initMap(boardingHouses);
+        },
+        error: function (error) {
+            console.error('Error fetching boarding houses:', error);
+        }
+    });
+});
+
+
+
+function spatialSearchBoardingHouse(latitude, longitude) {
+    $.ajax({
+        url: 'spatialSearch.php',
+        type: 'GET',
+        data: { latitude: latitude, longitude: longitude },
+        dataType: 'json',
+        success: function (boardingHouses) {
+            if (boardingHouses.length > 0) {
+                // Clear previous markers
+                clearMarkers();
+
+                if (!map) {
+                    map = L.map('map').setView([latitude, longitude], 15);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                }
+
+                // Add markers for the boarding houses
+                boardingHouses.forEach(boardingHouse => {
+                    const marker = L.marker([boardingHouse.latitude, boardingHouse.longitude]).addTo(map);
+
+                    const popupContent = `
+                        <b>${boardingHouse.boarding_house_name}</b><br>
+                        <i>${boardingHouse.address}</i><br>
+                        Rooms Available: ${boardingHouse.total_room}<br>
+                        Average Price: ${boardingHouse.room_price}<br>
+                        <button id='view-deal-btn' onclick='showMoreDetails("${boardingHouse.boarding_house_id}")'>View Details</button>
+                    `;
+
+                    marker.bindPopup(popupContent).openPopup();
+                });
+
+                map.panTo([latitude, longitude]);
+            } else {
+                alert('No boarding houses found.');
+            }
+        },
+        error: function (error) {
+            console.error('Error performing spatial search:', error);
+        }
+    });
+}
+
+
+
+function initMap(boardingHouses) {
+    // Initialize the map
+    if (!map) {
+        map = L.map('map').setView([13.587644, 124.208216], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    }
+
+    // Add markers for boarding houses
+    boardingHouses.forEach(boardingHouse => {
+        const marker = L.marker([boardingHouse.latitude, boardingHouse.longitude]).addTo(map);
+
+        const popupContent = `
+            <b>${boardingHouse.boarding_house_name}</b><br>
+            <i>${boardingHouse.address}</i><br>
+            Rooms Available: ${boardingHouse.total_room}<br>
+            Average Price: ${boardingHouse.room_price}<br>
+            <button onclick="showMoreDetails('${boardingHouse.boarding_house_id}')">More Details</button>
+        `;
+
+        marker.bindPopup(popupContent);
+    });
+}
+
+  function showMoreDetails(boardingHouseId) {
+    // Redirect to the bhDetails.php page with the boarding_house_id
+    window.location.href = 'bhDetails.php?boarding_house_id=' + boardingHouseId;
+}
+
+
+function searchBoardingHouse() {
+    // Get the input value
+    const boardingHouseName = $('#boardingHouseNameInput').val().trim();
+
+    // Check if the input is not empty
+    if (boardingHouseName !== '') {
+        // Use AJAX to fetch the boarding house data by name
+        $.ajax({
+            url: 'components/getBoardingHouseByName.php',
+            type: 'GET',
+            data: { name: boardingHouseName },
+            dataType: 'json',
+            success: function (boardingHouse) {
+                if (boardingHouse) {
+                    // Clear previous markers
+                    clearMarkers();
+
+                    // If the map is not initialized, initialize it
+                    if (!map) {
+                        map = L.map('map').setView([boardingHouse.latitude, boardingHouse.longitude], 15);
+
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                    }
+
+                    // Add a marker for the searched boarding house
+                    const marker = L.marker([boardingHouse.latitude, boardingHouse.longitude]).addTo(map);
+
+                    const popupContent = `
+                        <b>${boardingHouse.boarding_house_name}</b><br>
+                        <i>${boardingHouse.address}</i><br>
+                        Rooms Available: ${boardingHouse.total_room}<br>
+                        Average Price: ${boardingHouse.room_price}<br>
+                        <button id='view-deal-btn' onclick='showMoreDetails("${boardingHouse.boarding_house_id}")'>View Details</button>
+                    `;
+
+                    marker.bindPopup(popupContent).openPopup();
+
+                    // Pan the map to the new marker's location
+                    map.panTo([boardingHouse.latitude, boardingHouse.longitude]);
+                } else {
+                    alert('Boarding house not found.');
+                }
+            },
+            error: function (error) {
+                console.error('Error fetching boarding house by name:', error);
+            }
+        });
+    } else {
+        alert('Please enter a boarding house name.');
+    }
+}
+
+
+function viewdeal(index) {
+    // Fetch the boarding_house_id from the hotelArray based on the index
+    const boarding_house_id = hotelArray[index].boarding_house_id;
+
+    // Redirect to another page with detailed information
+    window.location.href = 'bhDetails.php?boarding_house_id=' + boarding_house_id;
+}
+
+function clearMarkers() {
+    // Clear existing markers if any
+    map.eachLayer(function (layer) {
+        if (layer instanceof L.Marker) {
+            map.removeLayer(layer);
+        }
+    });
+}
+
+
+function toggleFilterDropdown() {
+    var filterDropdown = document.getElementById("filterDropdown");
+    filterDropdown.style.display = (filterDropdown.style.display === "block") ? "none" : "block";
+  }
+  function applyFilter() {
+    // Get the input values
+    const maxPrice = $('#maxPriceInput').val().trim();
+    const roomType = $('#roomTypeDropdown').val();
+
+    // Check if max price is provided
+    if (maxPrice !== '') {
+        // Use AJAX to fetch the filtered boarding house data
+        $.ajax({
+            url: 'components/filterBoardingHouses.php',
+            type: 'GET',
+            data: { maxPrice, roomType },
+            dataType: 'json',
+            success: function (filteredBoardingHouses) {
+                if (filteredBoardingHouses.length > 0) {
+                    // Clear previous markers
+                    clearMarkers();
+
+                    // If the map is not initialized, initialize it
+                    if (!map) {
+                        map = L.map('map').setView([filteredBoardingHouses[0].latitude, filteredBoardingHouses[0].longitude], 15);
+
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                    }
+
+                    // Add markers for the filtered boarding houses
+                    filteredBoardingHouses.forEach(boardingHouse => {
+                        const marker = L.marker([boardingHouse.latitude, boardingHouse.longitude]).addTo(map);
+
+                        const popupContent = `
+                            <b>${boardingHouse.boarding_house_name}</b><br>
+                            <i>${boardingHouse.address}</i><br>
+                            Rooms Available: ${boardingHouse.total_room}<br>
+                            Average Price: ${boardingHouse.room_price}<br>
+                            Room Type: ${boardingHouse.room_type}<br>
+                            <button onclick="showMoreDetails('${boardingHouse.boarding_house_id}')">More Details</button>
+                        `;
+
+                        marker.bindPopup(popupContent);
+                    });
+                } else {
+                    alert('No boarding houses match the specified criteria.');
+                }
+            },
+            error: function (error) {
+                console.error('Error fetching filtered boarding houses:', error);
+            }
+        });
+    } else {
+        alert('Please provide max price for filtering.');
+    }
+}
+
+
+
+
+</script>
+<!-- End map -->
+
+    <!-- Slider -->
+    <!-- main-home -->
+<div id="main-home">
+    <h3 class="main-h3">These top Boarding Houses are just a click away</h3>
+    <div id="top-btn-div">
+        <a href="bhList.html"><button>View All Boarding Houses</button></a>
+    </div>
+    <div class="main-carousel" id="boardingHousesCarousel">
+        <!-- Boarding house items will be dynamically added here -->
+    </div>
+</div>
+
+<script>
+  $(document).ready(function () {
+      $.ajax({
+          url: 'components/getBoardingHouses.php',
+          type: 'GET',
+          dataType: 'json',
+          success: function (boardingHouses) {
+              displayBoardingHouses(boardingHouses);
+          },
+          error: function (error) {
+              console.error('Error fetching boarding houses:', error);
+          }
+      });
+  });
+
+  function displayBoardingHouses(boardingHouses) {
+      const carouselContainer = $('#boardingHousesCarousel');
+      let counter = 0; // Counter to limit to five items
+
+      boardingHouses.forEach(boardingHouse => {
+          if (counter < 5) {
+              const boardingHouseItem = `
+                  <div class="cell">
+                      <img src="images/${boardingHouse.boarding_house_photo}" alt="${boardingHouse.boarding_house_name}"/>
+                      <h6>${boardingHouse.boarding_house_name}</h6>
+                      <p>${boardingHouse.total_room} rooms <span class="Avg-price">Avg. ${boardingHouse.room_price}</span></p>
+                  </div>
+              `;
+              carouselContainer.append(boardingHouseItem);
+              counter++;
+          } else {
+              // Break out of the loop once five items are added
+              return false;
+          }
+      });
+
+      // Initialize the Flickity carousel after adding items
+      $('.main-carousel').flickity({
+          cellAlign: 'right',
+          wrapAround: true,
+          freeScroll: true,
+          contain: true,
+      });
+  }
+
+</script>
+
+<!-- End main-home -->
+
+
+    <!-- Passege -->
+    <div id="passege">
+        <div>
+          <h5>Time and Resource Savings:</h5>
+          <p>For both users and boarding house owners, the platform can save time and resources. Users can quickly find suitable accommodations, while owners can manage their occupancy information more effectively. This can lead to improved occupancy rates and customer satisfaction.</p>
+        </div>
+
+        <div>
+          <h5>Enhanced User Experience:</h5>
+          <p>A web-based platform that leverages spatial algorithms can provide users with a seamless and intuitive experience. Users can search for boarding houses based on location, occupancy, and other preferences, leading to a more personalized and efficient search process.</p>
+        </div>
+
+        <div>
+          <h5>Accurate Occupancy Checker:</h5>
+          <p>Incorporating an occupancy checker into the platform helps users easily identify boarding houses with available rooms. This feature can save users time and effort by presenting them with accurate real-time information, reducing the need for manual inquiries.</p>
+        </div>
+
+        <div>
+          <h5>Efficient Spatial Search:</h5>
+          <p>A K-Dimensional Tree allows for efficient spatial search, making it ideal for locating boarding houses based on geographic coordinates. This means users can quickly find available boarding houses in a specific area, improving the overall user experience.</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+    </script>
+    <!-- End_Slider/Passege -->
+
+    <!-- Footer -->
+    <div id="body-footer">
+      <div id="footer">
+      <hr id="line-1"/>
+        <div id="main-footer-5">
+          <h3>BHlocator</h3>
+          <p>Copyright 2023 BHlocator | All rights reserved.</p>
+        </div>
+   </div> 
+  </div>
+    <!-- End -->
+
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+</html>

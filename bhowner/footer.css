@@ -1,0 +1,28 @@
+#body-footer {
+    background-color: rgb(10, 17, 33);
+    padding-bottom: 1.5%;
+}
+
+#body-footer{
+    background-color: rgb(10,17,33);
+     padding-bottom: 1.5%;
+}
+#footer{
+    width: 75%;
+    margin: auto;
+    background-color: #333;
+}
+
+#main-footer-5{
+   text-align: center;
+   margin-top: 4%;
+}
+#main-footer-5 h3{
+    color: white;
+    font-weight: 700;
+}
+#main-footer-5 p{
+    font-size: 11px;
+    margin-top: 1.5%;
+    color: rgb(175, 168, 168);
+}

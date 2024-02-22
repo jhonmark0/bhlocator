@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaflet Map</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    /* Set the map container height */
+    #map {
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Map container -->
+  <div id="map"></div>
+
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+  <script>
+    // Initialize the map
+    var map = L.map('map').setView([13.5764, 124.2415], 16); // Set the coordinates and zoom level
+
+    // Add a tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Function to display latitude and longitude on click
+    function onMapClick(e) {
+      alert("Latitude: " + e.latlng.lat.toFixed(6) + "\nLongitude: " + e.latlng.lng.toFixed(6));
+    }
+
+    // Attach the click event to the map
+    map.on('click', onMapClick);
+  </script>
+
+</body>
+</html>
